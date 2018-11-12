@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(ba_g2o_ros)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -7,10 +7,52 @@ project(ba_g2o_ros)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+##set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
+## include( dependencies )
+
+
+set( CMAKE_BUILD_TYPE Release )
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall")
+
+list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules )
+
+find_package( G2O REQUIRED )
+find_package( OpenCV REQUIRED )
+find_package( Eigen3 REQUIRED )
+find_package( Cholmod )
+
 find_package(catkin REQUIRED COMPONENTS
-  cpp
+  roscpp
+  cmake_modules
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+  cv_bridge
+  message_filters
+  image_geometry
+  pcl_ros
+  nav_msgs
+  tf2
+  tf2_geometry_msgs
+  tf2_ros
+  image_transport
+  nodelet
+  rospy
 )
 
+
+include_directories(${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${CHOLMOD_INCLUDE_DIR})
+
+catkin_package(
+  CATKIN_DEPENDS roscpp std_msgs sensor_msgs geometry_msgs cv_bridge message_filters image_geometry pcl_ros nav_msgs tf2 tf2_geometry_msgs tf2_ros nodelet rospy
+  DEPENDS Eigen3 
+)
+
+SET(G2O_LIBRARIES ${G2O_STUFF_LIBRARY} ${G2O_CORE_LIBRARY} ${G2O_SOLVER_CHOLMOD} ${G2O_SOLVER_CSPARSE} ${G2O_SOLVER_DENSE} ${G2O_SOLVER_PCG} ${G2O_SOLVER_SLAM2D_LINEAR} ${G2O_SOLVER_STRUCTURE_ONLY} ${G2O_SOLVER_EIGEN} ${G2O_SOLVER_CSPARSE} ${G2O_SOLVER_CSPARSE_EXTENSION} ${G2O_TYPES_SLAM3D} ${G2O_TYPES_SBA})
+
+add_executable( ba_g2o_ros_node src/main.cpp )
+target_link_libraries( ba_g2o_ros_node ${OpenCV_LIBS} ${G2O_LIBRARIES} ${CHOLMOD_LIBRARIES} ${catkin_LIBRARIES})
+    
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -100,12 +142,12 @@ find_package(catkin REQUIRED COMPONENTS
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
+#catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ba_g2o_ros
-#  CATKIN_DEPENDS cpp
+#  CATKIN_DEPENDS roscpp rospy
 #  DEPENDS system_lib
-)
+#)
 
 ###########
 ## Build ##
@@ -113,10 +155,6 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
-)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
